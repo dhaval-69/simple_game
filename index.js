@@ -1,9 +1,10 @@
-const BULLET_LIFETIME= 0.75;
+const BULLET_LIFETIME = 0.75;
 const PLAYER_SPEED = 1000;
+const PLAYER_RADIUS = 39;
 const ENEMY_SPEED = PLAYER_SPEED / 3;
 const BULLET_SPEED = 2000;
 const BULLET_RADIUS = 19;
-const ENEMY_RADIUS = 39;
+const ENEMY_RADIUS = PLAYER_RADIUS;
 const ENEMY_COLOR = "#6495ED";
 const PLAYER_COLOR = "#f43841";
 const ENEMY_SPAWN_DISTANCE = 1000.0;
@@ -163,13 +164,13 @@ class Game {
         this.playerPos = new v2(69, 69)
         this.playerVel = new v2(0, 0)
         this.mousePos = new v2(0, 0)
-        this.playerRaius = 39
         this.enemy_cooldown = ENEMY_SPAWN_COOLDOWN
         this.bullets = []
         this.enemies = []
         this.particles = []
         this.tutorial = new TutorialPopup();
         this.resized = false;
+        this.puased = false;
 
     }
     resize(context) {
@@ -192,7 +193,7 @@ class Game {
         this.enemy_cooldown -= 0.01;
     }
     render(context) {
-        drawCircle(this.playerPos, this.playerRaius, PLAYER_COLOR, context)
+        drawCircle(this.playerPos, PLAYER_RADIUS, PLAYER_COLOR, context)
         for (let bullet of this.bullets) {
             bullet.render(context)
         }
@@ -210,6 +211,9 @@ class Game {
         }
     }
     update(dt) {
+        if (this.puased === true) {
+            return;
+        }
         this.playerPos = this.playerPos.add(vel.scale(dt))
         for (let bullet of this.bullets) {
             bullet.update(dt)
@@ -241,8 +245,15 @@ class Game {
         }
     }
     mouseDown(e) {
-        let mousePos = new v2(e.offsetX, e.offsetY)
-        let bulletVel = mousePos.sub(this.playerPos).norm().scale(BULLET_SPEED)
+        if (this.puased) {
+            return;
+        }
+        let mousePos = new v2(e.offsetX, e.offsetY);
+        let bulletpos = this.playerPos;
+        let bulletVel = mousePos
+            .sub(bulletpos)
+            .norm()
+            .scale(BULLET_SPEED);
 
         this.bullets.push(new Bullet(this.playerPos, bulletVel))
         this.tutorial.playerShot();
@@ -315,6 +326,11 @@ window.addEventListener('keyup', (e) => {
 })
 window.addEventListener("resize", () => {
     game.resized = true;
+})
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+        game.puased = game.puased ? false : true;
+    }
 })
 window.addEventListener('mousedown', e => {
     if (e.button === 0) {
